@@ -3,7 +3,7 @@ import { ViewType, FlowState } from '../lib/types';
 
 export function useAppState(isConnected: boolean) {
     const [activeView, setActiveView] = useState<ViewType>('HOME');
-    const [username, setUsername] = useState<string>('LazyGenius');
+    const [username, setUsername] = useState<string>('');
     const [isPro, setIsPro] = useState<boolean>(false);
     const [isSessionActive, setIsSessionActive] = useState<boolean>(false);
     const [showSessionPrompt, setShowSessionPrompt] = useState<boolean>(false);
