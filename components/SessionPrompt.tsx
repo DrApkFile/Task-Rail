@@ -24,7 +24,7 @@ export function SessionPrompt({ isVisible, onSave, onClose }: SessionPromptProps
     if (!shouldRender) return null;
 
     return (
-        <div className={`fixed top-8 right-8 z-[100] w-[320px] bg-zinc-900 border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 transform ${isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-12 opacity-0 scale-95 pointer-events-none'}`}>
+        <div className={`fixed bottom-4 left-4 right-4 sm:left-auto sm:right-8 sm:bottom-8 z-[100] sm:w-[320px] bg-zinc-900 border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 transform ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-12 opacity-0 scale-95 pointer-events-none'}`}>
             <div className="p-5 space-y-4">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
