@@ -14,15 +14,18 @@ export function HomeView({ bonusAmount, username }: { bonusAmount: number, usern
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard title="Tasks Completed" value="12" icon="✅" />
-                <StatCard title="Total Earned" value="$1,240.00" icon="💰" />
+                <StatCard title="Tasks Completed" value={bonusAmount > 0 ? "13" : "12"} icon="✅" />
+                <StatCard title="Total Earned" value={`$${(1240 + bonusAmount).toFixed(2)}`} icon="💰" />
                 <StatCard title="Wallet Balance" value={`$${(100 + bonusAmount).toFixed(2)}`} icon="💳" isHighlight />
             </div>
 
             <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
                 <div className="space-y-4">
-                    {/* Static Dummy Data */}
+                    {/* Dynamic Activity Item */}
+                    {bonusAmount > 0 && (
+                        <ActivityItem action="Task Reward: X Post" amount="+$10.00" date="Just now" status="Completed" isNew />
+                    )}
                     <ActivityItem action="Task Payout" amount="+$50.00" date="2 hours ago" status="Completed" />
                     <ActivityItem action="Task Payout" amount="+$120.00" date="Yesterday" status="Completed" />
                     <ActivityItem action="Task Payout" amount="+$15.00" date="Yesterday" status="Completed" />
@@ -44,18 +47,20 @@ function StatCard({ title, value, icon, isHighlight }: { title: string, value: s
     );
 }
 
-function ActivityItem({ action, amount, date, status }: { action: string, amount: string, date: string, status: string }) {
+function ActivityItem({ action, amount, date, status, isNew }: { action: string, amount: string, date: string, status: string, isNew?: boolean }) {
     return (
-        <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl hover:bg-white/5 transition-colors">
+        <div className={`flex items-center justify-between p-4 bg-black/20 rounded-xl hover:bg-white/5 transition-colors border ${isNew ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-transparent'}`}>
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">⚡</div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isNew ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/60'}`}>
+                    {isNew ? '✨' : '⚡'}
+                </div>
                 <div>
                     <p className="font-semibold text-white">{action}</p>
                     <p className="text-xs text-white/40">{date}</p>
                 </div>
             </div>
             <div className="text-right">
-                <p className="font-bold text-emerald-400">{amount}</p>
+                <p className={`font-bold ${isNew ? 'text-emerald-400' : 'text-white'}`}>{amount}</p>
                 <p className="text-xs text-white/40">{status}</p>
             </div>
         </div>
