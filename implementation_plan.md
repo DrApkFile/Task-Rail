@@ -60,11 +60,13 @@ Transform the single-page demo into "TaskRail", a dashboard-style application wi
 ## Phase 4: Session Keys (Smart Sessions)
 
 ### 1. The "Remember" Flow
-- **Trigger**: Displayed after the first successful transaction in a session.
+- **Trigger**: Displayed after the first successful transaction (Either Task or Pro sub).
 - **UX**: A non-intrusive floating prompt: "Save this session? (Skips signatures for 14 days)".
-- **Logic**: Store a `session_expiry` and `is_session_active` in `localStorage`.
+- **Logic**: Store `isPro`, `username`, and `isSessionActive` in `localStorage` to persist across refreshes.
 
-### 2. Instant Signing Experience
-- **Logic**: If a session is active, the `signAndSendTransaction` call will be bypassed with a fake delay + "Session Signing" loader to show how Session Keys work without the native prompt.
-- **Visuals**: A unique "Shield" icon in the top header showing "Session Secured".
+### 2. Unified Instant Signing
+- **Helper**: Implement a `signSafe` wrapper that checks for an active session.
+- **Support**: All flows (Subscribing, Task Completion, Task Claiming) will use this wrapper.
+- **Cross-Device Explanation**: Document that Passkeys sync via iCloud/Google for identity, while Session Keys provide the local frictionless experience.
+
 

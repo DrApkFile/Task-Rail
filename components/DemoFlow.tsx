@@ -25,7 +25,27 @@ export function DemoFlow() {
     // Task State (Lifted up to persist across views)
     const [taskState, setTaskState] = useState<FlowState>('IDLE');
 
-    // Reset state if disconnected
+    // 1. Persistence Logic: Load from LocalStorage
+    useEffect(() => {
+        const savedUsername = localStorage.getItem('tr_username');
+        const savedIsPro = localStorage.getItem('tr_isPro') === 'true';
+        const savedIsSessionActive = localStorage.getItem('tr_isSessionActive') === 'true';
+
+        if (savedUsername) setUsername(savedUsername);
+        if (savedIsPro) setIsPro(savedIsPro);
+        if (savedIsSessionActive) setIsSessionActive(savedIsSessionActive);
+    }, []);
+
+    // Sync to LocalStorage
+    useEffect(() => {
+        if (isConnected) {
+            localStorage.setItem('tr_username', username);
+            localStorage.setItem('tr_isPro', isPro.toString());
+            localStorage.setItem('tr_isSessionActive', isSessionActive.toString());
+        }
+    }, [username, isPro, isSessionActive, isConnected]);
+
+    // Reset state if disconnected (Clear persistence if explicit logout)
     useEffect(() => {
         if (!isConnected) {
             setTaskState('IDLE');
@@ -33,30 +53,47 @@ export function DemoFlow() {
             setIsPro(false);
             setIsSessionActive(false);
             setShowSessionPrompt(false);
+            localStorage.removeItem('tr_isPro');
+            localStorage.removeItem('tr_isSessionActive');
         }
     }, [isConnected]);
 
-    // Subscription Logic
-    const handleSubscribe = async () => {
-        try {
-            // 1. Create a Permission/Billing Instruction
-            const { TransactionInstruction, PublicKey } = await import('@solana/web3.js');
-            const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
-            const instruction = new TransactionInstruction({
-                keys: [{ pubkey: smartWalletPubkey!, isSigner: true, isWritable: true }],
-                programId: memoProgramId,
-                data: Buffer.from("TaskRail: Subscribed to Pro", "utf-8"),
-            });
+    // UNIFIED SIGNING HELPER
+    const executeTransaction = async (memo: string) => {
+        const { TransactionInstruction, PublicKey } = await import('@solana/web3.js');
+        const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
+        const instruction = new TransactionInstruction({
+            keys: [{ pubkey: smartWalletPubkey!, isSigner: true, isWritable: true }],
+            programId: memoProgramId,
+            data: Buffer.from(memo, "utf-8"),
+        });
 
-            // 2. Send Gasless Setup Transaction
-            console.log("Setting up automated billing...");
+        if (isSessionActive) {
+            console.log(`[Smart Session] Signing instantly: ${memo}`);
+            await new Promise(r => setTimeout(r, 1200)); // Simulated background sign
+            return "SESSION_SIGNATURE_PROVED";
+        } else {
+            console.log(`[Passkey] Requesting signature: ${memo}`);
             const sig = await signAndSendTransaction({
                 instructions: [instruction],
             });
 
-            console.log("Subscription active:", sig);
+            // Post-First-Transaction Prompt Logic
+            if (!hasDoneFirstTask) {
+                setTimeout(() => setShowSessionPrompt(true), 1500);
+                setHasDoneFirstTask(true);
+            }
+
+            return sig;
+        }
+    };
+
+    // Subscription Logic
+    const handleSubscribe = async () => {
+        try {
+            await executeTransaction("TaskRail: Subscribed to Pro");
             setIsPro(true);
-            alert("Welcome to TaskRail Pro!");
+            // alert("Welcome to TaskRail Pro!");
         } catch (err) {
             console.error("Subscription failed:", err);
             // alert("Subscription setup failed.");
@@ -67,38 +104,8 @@ export function DemoFlow() {
     const handleTaskSubmit = async () => {
         try {
             setTaskState('SUBMITTING');
-
-            const { TransactionInstruction, PublicKey } = await import('@solana/web3.js');
-            const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
-            const instruction = new TransactionInstruction({
-                keys: [{ pubkey: smartWalletPubkey!, isSigner: true, isWritable: true }],
-                programId: memoProgramId,
-                data: Buffer.from("TaskRail: Completed", "utf-8"),
-            });
-
-            console.log(isSessionActive ? "Signing instantly via Smart Session..." : "Requesting Passkey signature...");
-
-            // SESSION KEY LOGIC: If session is active, we simulate the 'Instant' experience
-            if (isSessionActive) {
-                // Fake delay to show 'Session Signing' feedback
-                await new Promise(r => setTimeout(r, 1200));
-                // In a real AA setup, this would use a Scoped Key in memory
-                console.log("Background signature generated.");
-            } else {
-                const sig = await signAndSendTransaction({
-                    instructions: [instruction],
-                });
-                console.log("Passkey verified:", sig);
-            }
-
+            await executeTransaction("TaskRail: Completed Task");
             setTaskState('PAID');
-
-            // Trigger 'Save Session' prompt after the first real transaction
-            if (!isSessionActive && !hasDoneFirstTask) {
-                setTimeout(() => setShowSessionPrompt(true), 1500);
-                setHasDoneFirstTask(true);
-            }
-
         } catch (err) {
             console.error("Transaction failed:", err);
             setTaskState('CLAIMED');
