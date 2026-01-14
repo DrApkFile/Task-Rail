@@ -1,0 +1,105 @@
+"use client"
+
+import { ReactNode } from 'react';
+import { useWallet } from '@lazorkit/wallet';
+import { Logo } from './Logo';
+
+export type ViewType = 'HOME' | 'TASKS';
+
+interface DashboardLayoutProps {
+    children: ReactNode;
+    activeView: ViewType;
+    username: string; // Add username prop
+    onNavigate: (view: ViewType) => void;
+    onLogout: () => void;
+}
+
+export function DashboardLayout({ children, activeView, username, onNavigate, onLogout }: DashboardLayoutProps) {
+    const { smartWalletPubkey } = useWallet();
+
+    const navItems = [
+        { id: 'HOME', label: 'Home', icon: '🏠' },
+        { id: 'TASKS', label: 'Tasks', icon: '📋' },
+    ];
+
+    return (
+        <div className="flex h-screen bg-black text-white overflow-hidden font-[family-name:var(--font-geist-sans)]">
+            {/* Sidebar */}
+            <aside className="w-64 bg-zinc-950 border-r border-white/10 flex flex-col p-6 z-20">
+                <div className="mb-10">
+                    <Logo className="text-2xl" />
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 space-y-2">
+                    {navItems.map((item) => (
+                        <button
+                            key={item.id}
+                            onClick={() => onNavigate(item.id as ViewType)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === item.id
+                                ? 'bg-emerald-500/10 text-emerald-400 font-semibold'
+                                : 'text-white/50 hover:bg-white/5 hover:text-white'
+                                }`}
+                        >
+                            <span className="text-xl">{item.icon}</span>
+                            {item.label}
+                        </button>
+                    ))}
+                </nav>
+
+                {/* Profile & Logout */}
+                <div className="pt-6 border-t border-white/10 space-y-4">
+                    <div className="flex items-center gap-3 px-2">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-sm font-bold uppercase">
+                            {username.slice(0, 2)}
+                        </div>
+                        <div className="overflow-hidden">
+                            <p className="text-sm font-medium leading-none truncate">{username}</p>
+                            <p className="text-xs text-white/40 mt-1 opacity-70">Member</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                        Sign Out
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black relative flex flex-col">
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20 pointer-events-none"></div>
+
+                {/* Header / Top Right Info */}
+                <header className="relative z-20 flex justify-end p-6">
+                    <div
+                        onClick={() => {
+                            if (smartWalletPubkey) {
+                                navigator.clipboard.writeText(smartWalletPubkey.toBase58());
+                                alert("Address copied!");
+                            }
+                        }}
+                        className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl backdrop-blur-md cursor-pointer hover:bg-white/10 transition-all group"
+                    >
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider leading-none mb-1">Smart Wallet</span>
+                            <code className="text-xs text-emerald-400 font-mono leading-none">
+                                {smartWalletPubkey?.toBase58().slice(0, 6)}...{smartWalletPubkey?.toBase58().slice(-6)}
+                            </code>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/20 group-hover:text-white/60 transition-colors">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                        </svg>
+                    </div>
+                </header>
+
+                <div className="flex-1 p-8 pt-2 max-w-6xl mx-auto w-full relative z-10">
+                    {children}
+                </div>
+            </main>
+        </div>
+    );
+}
