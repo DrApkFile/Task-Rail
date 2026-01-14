@@ -38,16 +38,14 @@ export function DemoFlow() {
             const instruction = new TransactionInstruction({
                 keys: [{ pubkey: smartWalletPubkey!, isSigner: true, isWritable: true }],
                 programId: memoProgramId,
-                data: Buffer.from("LazorKit Bounty: Task Completed", "utf-8"),
+                data: Buffer.from("TaskRail: Completed", "utf-8"),
             });
 
             // 2. Send Gasless Transaction
             console.log("Sending gasless transaction...");
             const sig = await signAndSendTransaction({
                 instructions: [instruction],
-                transactionOptions: {
-                    computeUnitLimit: 500_000,
-                }
+                // No options needed, helps reduce tx size
             });
 
             console.log("Transaction confirmed:", sig);
