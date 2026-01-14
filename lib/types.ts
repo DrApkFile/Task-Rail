@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type ViewType = 'HOME' | 'TASKS' | 'PRO';
+export type ViewType = 'HOME' | 'TASKS' | 'PRO' | 'DOCS';
 export type FlowState = 'IDLE' | 'CLAIMED' | 'SUBMITTING' | 'PAID';
 
 export interface UserState {

@@ -4,7 +4,8 @@ import { useState, ReactNode } from 'react';
 import { useWallet } from '@lazorkit/wallet';
 import { Logo } from './Logo';
 import { ViewType } from '../lib/types';
-import { Home, ClipboardList, Zap, LogOut, Star, Copy, ExternalLink, Menu, X } from 'lucide-react';
+import Link from 'next/link';
+import { Home, ClipboardList, Zap, LogOut, Star, Copy, ExternalLink, Menu, X, BookOpen } from 'lucide-react';
 
 interface DashboardLayoutProps {
     children: ReactNode;
@@ -24,6 +25,7 @@ export function DashboardLayout({ children, activeView, username, isPro, isSessi
         { id: 'HOME', label: 'Home', icon: Home },
         { id: 'TASKS', label: 'Tasks', icon: ClipboardList },
         { id: 'PRO', label: 'TaskRail Pro', icon: Zap },
+        { id: 'DOCS', label: 'Documentation', icon: BookOpen, href: '/docs' },
     ];
 
     const handleNavigate = (view: ViewType) => {
@@ -56,17 +58,40 @@ export function DashboardLayout({ children, activeView, username, isPro, isSessi
                 <nav className="flex-1 space-y-2">
                     {navItems.map((item) => {
                         const Icon = item.icon;
+                        const isLink = 'href' in item;
+
+                        const content = (
+                            <>
+                                <Icon size={20} />
+                                {item.label}
+                            </>
+                        );
+
+                        const className = `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === item.id
+                            ? 'bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20'
+                            : 'text-white/50 hover:bg-white/5 hover:text-white border border-transparent'
+                            }`;
+
+                        if (isLink) {
+                            return (
+                                <Link
+                                    key={item.id}
+                                    href={item.href as string}
+                                    className={className}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {content}
+                                </Link>
+                            );
+                        }
+
                         return (
                             <button
                                 key={item.id}
                                 onClick={() => handleNavigate(item.id as ViewType)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeView === item.id
-                                    ? 'bg-emerald-500/10 text-emerald-400 font-semibold'
-                                    : 'text-white/50 hover:bg-white/5 hover:text-white'
-                                    }`}
+                                className={className}
                             >
-                                <Icon size={20} />
-                                {item.label}
+                                {content}
                             </button>
                         );
                     })}
