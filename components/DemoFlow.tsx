@@ -8,6 +8,7 @@ import { DashboardLayout, ViewType } from './DashboardLayout';
 import { HomeView } from './views/HomeView';
 import { TasksView } from './views/TasksView';
 import { ProView } from './views/ProView';
+import { SessionPrompt } from './SessionPrompt';
 import { Logo } from './Logo';
 
 type FlowState = 'IDLE' | 'CLAIMED' | 'SUBMITTING' | 'PAID';
@@ -17,6 +18,9 @@ export function DemoFlow() {
     const [activeView, setActiveView] = useState<ViewType>('HOME');
     const [username, setUsername] = useState<string>('LazyGenius');
     const [isPro, setIsPro] = useState<boolean>(false);
+    const [isSessionActive, setIsSessionActive] = useState<boolean>(false);
+    const [showSessionPrompt, setShowSessionPrompt] = useState<boolean>(false);
+    const [hasDoneFirstTask, setHasDoneFirstTask] = useState<boolean>(false);
 
     // Task State (Lifted up to persist across views)
     const [taskState, setTaskState] = useState<FlowState>('IDLE');
@@ -27,6 +31,8 @@ export function DemoFlow() {
             setTaskState('IDLE');
             setActiveView('HOME');
             setIsPro(false);
+            setIsSessionActive(false);
+            setShowSessionPrompt(false);
         }
     }, [isConnected]);
 
@@ -70,13 +76,29 @@ export function DemoFlow() {
                 data: Buffer.from("TaskRail: Completed", "utf-8"),
             });
 
-            console.log("Sending gasless transaction...");
-            const sig = await signAndSendTransaction({
-                instructions: [instruction],
-            });
+            console.log(isSessionActive ? "Signing instantly via Smart Session..." : "Requesting Passkey signature...");
 
-            console.log("Transaction confirmed:", sig);
+            // SESSION KEY LOGIC: If session is active, we simulate the 'Instant' experience
+            if (isSessionActive) {
+                // Fake delay to show 'Session Signing' feedback
+                await new Promise(r => setTimeout(r, 1200));
+                // In a real AA setup, this would use a Scoped Key in memory
+                console.log("Background signature generated.");
+            } else {
+                const sig = await signAndSendTransaction({
+                    instructions: [instruction],
+                });
+                console.log("Passkey verified:", sig);
+            }
+
             setTaskState('PAID');
+
+            // Trigger 'Save Session' prompt after the first real transaction
+            if (!isSessionActive && !hasDoneFirstTask) {
+                setTimeout(() => setShowSessionPrompt(true), 1500);
+                setHasDoneFirstTask(true);
+            }
+
         } catch (err) {
             console.error("Transaction failed:", err);
             setTaskState('CLAIMED');
@@ -148,30 +170,43 @@ export function DemoFlow() {
     // RENDER: Dashboard (Connected)
     // ---------------------------------------------------------
     return (
-        <DashboardLayout
-            activeView={activeView}
-            onNavigate={setActiveView}
-            username={username}
-            isPro={isPro}
-            onLogout={disconnect}
-        >
-            {activeView === 'HOME' && (
-                <HomeView bonusAmount={taskState === 'PAID' ? 10 : 0} username={username} />
-            )}
-            {activeView === 'TASKS' && (
-                <TasksView
-                    demoTaskState={taskState}
-                    isPro={isPro}
-                    onClaim={() => setTaskState('CLAIMED')}
-                    onSubmit={handleTaskSubmit}
-                />
-            )}
-            {activeView === 'PRO' && (
-                <ProView
-                    isPro={isPro}
-                    onSubscribe={handleSubscribe}
-                />
-            )}
-        </DashboardLayout>
+        <>
+            <DashboardLayout
+                activeView={activeView}
+                onNavigate={setActiveView}
+                username={username}
+                isPro={isPro}
+                isSessionActive={isSessionActive}
+                onLogout={disconnect}
+            >
+                {activeView === 'HOME' && (
+                    <HomeView bonusAmount={taskState === 'PAID' ? 10 : 0} username={username} />
+                )}
+                {activeView === 'TASKS' && (
+                    <TasksView
+                        demoTaskState={taskState}
+                        isPro={isPro}
+                        onClaim={() => setTaskState('CLAIMED')}
+                        onSubmit={handleTaskSubmit}
+                    />
+                )}
+                {activeView === 'PRO' && (
+                    <ProView
+                        isPro={isPro}
+                        onSubscribe={handleSubscribe}
+                    />
+                )}
+            </DashboardLayout>
+
+            <SessionPrompt
+                isVisible={showSessionPrompt}
+                onSave={() => {
+                    setIsSessionActive(true);
+                    setShowSessionPrompt(false);
+                    alert("Session saved! Future tasks will sign instantly.");
+                }}
+                onClose={() => setShowSessionPrompt(false)}
+            />
+        </>
     );
 }

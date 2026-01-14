@@ -56,3 +56,15 @@ Transform the single-page demo into "TaskRail", a dashboard-style application wi
 ### 2. UI Persistence
 - **Sidebar**: Change "Upgrade" button to a "PRO" badge once subscribed.
 - **Tasks View**: Increase dummy task count from 6 to 12 upon `isPro` status.
+
+## Phase 4: Session Keys (Smart Sessions)
+
+### 1. The "Remember" Flow
+- **Trigger**: Displayed after the first successful transaction in a session.
+- **UX**: A non-intrusive floating prompt: "Save this session? (Skips signatures for 14 days)".
+- **Logic**: Store a `session_expiry` and `is_session_active` in `localStorage`.
+
+### 2. Instant Signing Experience
+- **Logic**: If a session is active, the `signAndSendTransaction` call will be bypassed with a fake delay + "Session Signing" loader to show how Session Keys work without the native prompt.
+- **Visuals**: A unique "Shield" icon in the top header showing "Session Secured".
+

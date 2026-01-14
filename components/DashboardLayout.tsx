@@ -10,12 +10,13 @@ interface DashboardLayoutProps {
     children: ReactNode;
     activeView: ViewType;
     username: string;
-    isPro?: boolean; // Add isPro prop
+    isPro?: boolean;
+    isSessionActive?: boolean; // Add session prop
     onNavigate: (view: ViewType) => void;
     onLogout: () => void;
 }
 
-export function DashboardLayout({ children, activeView, username, isPro, onNavigate, onLogout }: DashboardLayoutProps) {
+export function DashboardLayout({ children, activeView, username, isPro, isSessionActive, onNavigate, onLogout }: DashboardLayoutProps) {
     const { smartWalletPubkey } = useWallet();
 
     const navItems = [
@@ -85,7 +86,15 @@ export function DashboardLayout({ children, activeView, username, isPro, onNavig
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20 pointer-events-none"></div>
 
                 {/* Header / Top Right Info */}
-                <header className="relative z-20 flex justify-end p-6">
+                <header className="relative z-20 flex justify-end items-center gap-4 p-6">
+                    {isSessionActive && (
+                        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full animate-in fade-in slide-in-from-right-4">
+                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                Session Active
+                            </span>
+                        </div>
+                    )}
                     <div
                         onClick={() => {
                             if (smartWalletPubkey) {
