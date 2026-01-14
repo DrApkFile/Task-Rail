@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { TaskCard } from '../TaskCard';
+import { ShieldCheck, Clock, Star, Lock } from 'lucide-react';
 
 type TaskTab = 'EXPLORE' | 'MY_TASKS';
 type MyTaskFilter = 'PENDING' | 'UNCLAIMED' | 'COMPLETED';
 
 interface TasksViewProps {
     demoTaskState: 'IDLE' | 'CLAIMED' | 'SUBMITTING' | 'PAID';
-    isPro: boolean; // Add isPro prop
+    isPro: boolean;
     onClaim: () => void;
     onSubmit: () => void;
 }
@@ -36,11 +37,11 @@ export function TasksView({ demoTaskState, isPro, onClaim, onSubmit }: TasksView
                     {Array.from({ length: exploreCount }).map((_, i) => (
                         <div key={i} className={`bg-zinc-900/30 border p-6 rounded-xl transition-all ${isPro ? 'border-emerald-500/10 hover:border-emerald-500/40 hover:bg-emerald-500/5' : 'border-white/5 opacity-60 hover:opacity-100'}`}>
                             <div className="flex justify-between items-start mb-4">
-                                <div className={`w-10 h-10 rounded-full ${isPro ? 'bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs' : 'bg-white/10'}`}>
-                                    {isPro ? 'PRO' : ''}
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isPro ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/20'}`}>
+                                    {isPro ? <ShieldCheck size={20} /> : <Lock size={18} />}
                                 </div>
-                                <span className={`text-xs px-2 py-1 rounded ${isPro ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/50'}`}>
-                                    {isPro ? 'Available' : 'Locked'}
+                                <span className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${isPro ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/50'}`}>
+                                    {isPro ? <>Available</> : <><Lock size={10} /> Locked</>}
                                 </span>
                             </div>
                             <h4 className="font-semibold text-white mb-2">{isPro ? 'Premium' : 'Social'} Booster #{i + 1}</h4>
@@ -116,12 +117,23 @@ function DummyTaskRow({ title, reward, status, isNew }: { title: string, reward:
     return (
         <div className={`flex items-center justify-between p-4 bg-zinc-900 border ${isNew ? 'border-emerald-500/50 bg-emerald-900/10' : 'border-white/5'} rounded-xl`}>
             <div>
-                <h4 className="text-white font-medium">{title} {isNew && <span className="text-emerald-400 text-xs ml-2">(Just now)</span>}</h4>
+                <h4 className="text-white font-medium flex items-center gap-2">
+                    {title}
+                    {isNew && (
+                        <span className="text-emerald-400 text-xs flex items-center gap-1">
+                            <Clock size={10} />
+                            (Just now)
+                        </span>
+                    )}
+                </h4>
                 <p className="text-xs text-white/40">Task ID: #8823</p>
             </div>
             <div className="text-right">
                 <p className="text-sm font-bold text-white">{reward}</p>
-                <p className={`text-xs ${status === 'Paid' ? 'text-emerald-400' : 'text-yellow-500'}`}>{status}</p>
+                <p className={`text-xs flex items-center justify-end gap-1 ${status === 'Paid' ? 'text-emerald-400' : 'text-yellow-500'}`}>
+                    {status === 'Paid' && <ShieldCheck size={10} />}
+                    {status}
+                </p>
             </div>
         </div>
     )

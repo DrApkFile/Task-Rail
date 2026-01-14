@@ -1,150 +1,80 @@
-# LazorKit Micro Marketplace Demo
+# TaskRail | Passkey-Powered Web3 Productivity
 
-A production-ready example demonstrating how to integrate **LazorKit** for Passkey Authentication and Gasless Transactions on Solana.
+TaskRail is a production-grade demonstration of Lazorkit, showcasing how to build a frictionless, biometrics-first user experience on Solana. It eliminates the complexities of seed phrases and gas fees, providing a Web2-like experience with Web3 security.
 
-![Demo](https://via.placeholder.com/800x400?text=LazorKit+Demo+Preview)
+## Project Overview
 
-## 🚀 Overview
-
-This project simulates a **Micro Marketplace** workflow where a creator can:
-1.  **Sign In without a seed phrase** (using FaceID/TouchID via LazorKit Passkeys).
-2.  **Claim a Task** from the marketplace.
-3.  **Submit the Task** and receive a payout instantly, with **Zero Gas Fees** (sponsored by a Paymaster).
-
-## ✨ Features
-
--   **Passkey Authentication**: Onboard users in seconds with biometric verification.
--   **Smart Wallet Creation**: Automatically generate a PDA-based wallet for every user.
--   **Gasless Transactions**: Execute on-chain actions (Memo/Transfer) without the user needing SOL.
--   **Next.js 15 + Tailwind**: Modern, responsive, and beautiful UI.
+TaskRail simulates a decentralized marketplace where users can complete tasks and get paid instantly in USDC. Key highlights include:
+- Biometric Onboarding: No passwords or seed phrases. Users sign in with FaceID, TouchID, or Windows Hello.
+- Gasless Transactions: All on-chain actions are sponsored by a Paymaster. Users never need to hold SOL.
+- Smart Sessions: A unique "Session Key" simulation that allows 14 days of instant actions after a single approval.
+- Automated Billing: On-chain consent for Pro subscriptions via Solana Memo instructions.
 
 ---
 
-## 🛠️ Quick Start
+## Quick-Start Guide
 
-### Prerequisites
--   Node.js 18+
--   npm or yarn
+### 1. Prerequisites
+- Node.js: 18.x or higher
+- Modern Browser: Chrome, Edge, or Safari with WebAuthn support (for Passkeys)
 
-### Installation
+### 2. SDK Installation & Config
+Lazorkit is the core engine of TaskRail. Install it along with its peer dependencies:
 
-1.  **Clone the repo:**
-    ```bash
-    git clone https://github.com/your-username/lazor-kit-marketplace.git
-    cd lazor-kit-marketplace
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-
-4.  **Open the app:**
-    Navigate to [http://localhost:3000](http://localhost:3000).
-
----
-
-## 📚 Tutorials
-
-### 1. How to Create a Passkey-Based Wallet
-
-LazorKit abstracts the entire wallet creation process into a single hook.
-
-**Step 1: Wrap your app in the Provider**
-In `app/providers.tsx`:
-```tsx
-import { LazorkitProvider } from '@lazorkit/wallet';
-
-export function Providers({ children }) {
-  return (
-    <LazorkitProvider 
-      rpcUrl="https://api.devnet.solana.com"
-      portalUrl="https://portal.lazor.sh" 
-      paymasterConfig={{ paymasterUrl: "https://kora.devnet.lazorkit.com" }}
-    >
-      {children}
-    </LazorkitProvider>
-  );
-}
+```bash
+npm install @lazorkit/wallet @solana/web3.js buffer
 ```
 
-**Step 2: Use the Hook to Connect**
-In your Login component:
-```tsx
-import { useWallet } from '@lazorkit/wallet';
-
-export function LoginButton() {
-  const { connect, connected } = useWallet();
-
-  return (
-    <button onClick={connect}>
-      {connected ? "Connected" : "Sign in with Passkey"}
-    </button>
-  );
-}
-```
-*That's it! Calling `connect()` triggers the system's biometric prompt and creates the wallet.*
-
-### 2. How to Trigger a Gasless Transaction
-
-To send a transaction where the app (or Paymaster) pays the gas, use `signAndSendTransaction`.
+### 3. Environment Setup
+The project is configured out of the box to work on Solana Devnet. You can find the configuration in app/providers.tsx:
 
 ```tsx
-import { useWallet } from '@lazorkit/wallet';
-import { TransactionInstruction, PublicKey } from '@solana/web3.js';
-
-const { signAndSendTransaction, publicKey } = useWallet();
-
-const handleTransaction = async () => {
-  // 1. Create your Solana Instruction (e.g., Memo)
-  const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
-  const instruction = new TransactionInstruction({
-    keys: [{ pubkey: publicKey!, isSigner: true, isWritable: true }],
-    programId: memoProgramId,
-    data: Buffer.from("Task Completed!", "utf-8"),
-  });
-
-  // 2. Send it via LazorKit (Paymaster is automatic if configured)
-  const signature = await signAndSendTransaction({
-    instructions: [instruction],
-    transactionOptions: {
-      computeUnitLimit: 500_000, // Optional optimization
-    }
-  });
-
-  console.log("Gasless Tx Confirmed:", signature);
+const CONFIG = {
+  rpcUrl: "https://api.devnet.solana.com",
+  portalUrl: "https://portal.lazor.sh",
+  paymasterConfig: {
+    paymasterUrl: "https://kora.devnet.lazorkit.com",
+  }
 };
 ```
 
+### 4. Running the Example
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open the app:
+   Navigate to http://localhost:3000.
+
 ---
 
-## 📦 Project Structure
+## How to Test (The Demo Flow)
 
-```
-├── app/
-│   ├── layout.tsx       # Global layout + Providers wrapper
-│   ├── page.tsx         # Main entry point
-│   └── providers.tsx    # Lazorkit SDK Configuration
-├── components/
-│   ├── DemoFlow.tsx     # Main State Machine (Idle -> Paid)
-│   ├── LoginButton.tsx  # Auth Component
-│   ├── TaskCard.tsx     # Marketplace UI
-│   └── SmartWalletInfo.tsx # Wallet Display
-└── package.json
-```
+To experience the full tech stack, follow this walkthrough:
 
-## 🤝 Contributing
+1. Onboard: Enter a username and click Sign in with Passkey. Use your device biometrics to create your Smart Wallet instantly.
+2. Gasless Task: Go to the "Tasks" tab and click Submit Task. Notice that you receive a reward without paying gas.
+3. Active Session: After your first task, save your session when prompted. A "Session Active" badge will appear in the header.
+4. Instant Action: Upgrade to TaskRail Pro or complete more tasks. Notice that transactions now sign instantly in the background without a Passkey prompt.
 
-This is a demonstration repo for a Superteam Bounty. Feel free to fork and expand!
+---
 
-## 🔗 Resources
+## Architecture & Reusability
 
--   [LazorKit Documentation](https://docs.lazorkit.com/)
--   [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
+TaskRail is built with "Starter Template Quality" in mind. The logic is strictly modularized for easy reuse:
+
+- hooks/useAppState.ts: Centralized state and persistence (LocalStorage).
+- lib/solana.ts: Pure blockchain interaction and session bypass logic.
+- lib/types.ts: Shared type definitions for the entire app.
+- components/views/: Decoupled UI components for different app states.
+
+---
+
+## Resources
+- [Lazorkit Documentation](https://docs.lazorkit.com/)
+- [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/)
+- [Next.js Framework](https://nextjs.org/)

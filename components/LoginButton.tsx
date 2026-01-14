@@ -1,6 +1,7 @@
 "use client"
 
 import { useWallet } from '@lazorkit/wallet';
+import { KeyRound, Loader2 } from 'lucide-react';
 
 export function LoginButton() {
     const { connect, disconnect, isConnected, isConnecting } = useWallet();
@@ -33,12 +34,13 @@ export function LoginButton() {
         >
             {isConnecting ? (
                 <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
+                    <Loader2 size={16} className="animate-spin" />
                     Authenticating...
                 </span>
             ) : (
                 <span className="flex items-center gap-2">
-                    🔑 Sign in with Passkey
+                    <KeyRound size={18} />
+                    Sign in with Passkey
                 </span>
             )}
         </button>

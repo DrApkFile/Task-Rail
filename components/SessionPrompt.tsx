@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
+import { Shield, Clock, X } from 'lucide-react';
 
 interface SessionPromptProps {
     isVisible: boolean;
@@ -27,8 +28,8 @@ export function SessionPrompt({ isVisible, onSave, onClose }: SessionPromptProps
             <div className="p-5 space-y-4">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-xl">
-                            🛡️
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                            <Shield size={20} />
                         </div>
                         <div>
                             <h4 className="text-sm font-bold text-white">Save this session?</h4>
@@ -39,13 +40,16 @@ export function SessionPrompt({ isVisible, onSave, onClose }: SessionPromptProps
                         onClick={onClose}
                         className="text-white/20 hover:text-white transition-colors"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                        <X size={16} />
                     </button>
                 </div>
 
                 <div className="bg-black/40 rounded-xl p-3 border border-white/5">
                     <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-white/40 font-medium uppercase tracking-wider">Duration</span>
+                        <span className="text-white/40 font-medium uppercase tracking-wider flex items-center gap-1">
+                            <Clock size={10} />
+                            Duration
+                        </span>
                         <span className="text-emerald-400 font-bold">14 Days</span>
                     </div>
                 </div>
