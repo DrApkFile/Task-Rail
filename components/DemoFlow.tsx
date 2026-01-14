@@ -7,6 +7,7 @@ import { LoginButton } from './LoginButton';
 import { DashboardLayout, ViewType } from './DashboardLayout';
 import { HomeView } from './views/HomeView';
 import { TasksView } from './views/TasksView';
+import { ProView } from './views/ProView';
 import { Logo } from './Logo';
 
 type FlowState = 'IDLE' | 'CLAIMED' | 'SUBMITTING' | 'PAID';
@@ -15,6 +16,7 @@ export function DemoFlow() {
     const { isConnected, signAndSendTransaction, smartWalletPubkey, disconnect } = useWallet();
     const [activeView, setActiveView] = useState<ViewType>('HOME');
     const [username, setUsername] = useState<string>('LazyGenius');
+    const [isPro, setIsPro] = useState<boolean>(false);
 
     // Task State (Lifted up to persist across views)
     const [taskState, setTaskState] = useState<FlowState>('IDLE');
@@ -24,15 +26,42 @@ export function DemoFlow() {
         if (!isConnected) {
             setTaskState('IDLE');
             setActiveView('HOME');
+            setIsPro(false);
         }
     }, [isConnected]);
+
+    // Subscription Logic
+    const handleSubscribe = async () => {
+        try {
+            // 1. Create a Permission/Billing Instruction
+            const { TransactionInstruction, PublicKey } = await import('@solana/web3.js');
+            const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
+            const instruction = new TransactionInstruction({
+                keys: [{ pubkey: smartWalletPubkey!, isSigner: true, isWritable: true }],
+                programId: memoProgramId,
+                data: Buffer.from("TaskRail: Subscribed to Pro", "utf-8"),
+            });
+
+            // 2. Send Gasless Setup Transaction
+            console.log("Setting up automated billing...");
+            const sig = await signAndSendTransaction({
+                instructions: [instruction],
+            });
+
+            console.log("Subscription active:", sig);
+            setIsPro(true);
+            alert("Welcome to TaskRail Pro!");
+        } catch (err) {
+            console.error("Subscription failed:", err);
+            // alert("Subscription setup failed.");
+        }
+    };
 
     // Task Submission Logic
     const handleTaskSubmit = async () => {
         try {
             setTaskState('SUBMITTING');
 
-            // 1. Create a Memo Instruction (Proof of Work)
             const { TransactionInstruction, PublicKey } = await import('@solana/web3.js');
             const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
             const instruction = new TransactionInstruction({
@@ -41,18 +70,15 @@ export function DemoFlow() {
                 data: Buffer.from("TaskRail: Completed", "utf-8"),
             });
 
-            // 2. Send Gasless Transaction
             console.log("Sending gasless transaction...");
             const sig = await signAndSendTransaction({
                 instructions: [instruction],
-                // No options needed, helps reduce tx size
             });
 
             console.log("Transaction confirmed:", sig);
             setTaskState('PAID');
         } catch (err) {
             console.error("Transaction failed:", err);
-            alert("Transaction failed. Check console for details.");
             setTaskState('CLAIMED');
         }
     };
@@ -126,15 +152,24 @@ export function DemoFlow() {
             activeView={activeView}
             onNavigate={setActiveView}
             username={username}
+            isPro={isPro}
             onLogout={disconnect}
         >
-            {activeView === 'HOME' ? (
+            {activeView === 'HOME' && (
                 <HomeView bonusAmount={taskState === 'PAID' ? 10 : 0} username={username} />
-            ) : (
+            )}
+            {activeView === 'TASKS' && (
                 <TasksView
                     demoTaskState={taskState}
+                    isPro={isPro}
                     onClaim={() => setTaskState('CLAIMED')}
                     onSubmit={handleTaskSubmit}
+                />
+            )}
+            {activeView === 'PRO' && (
+                <ProView
+                    isPro={isPro}
+                    onSubscribe={handleSubscribe}
                 />
             )}
         </DashboardLayout>

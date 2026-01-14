@@ -4,22 +4,24 @@ import { ReactNode } from 'react';
 import { useWallet } from '@lazorkit/wallet';
 import { Logo } from './Logo';
 
-export type ViewType = 'HOME' | 'TASKS';
+export type ViewType = 'HOME' | 'TASKS' | 'PRO';
 
 interface DashboardLayoutProps {
     children: ReactNode;
     activeView: ViewType;
-    username: string; // Add username prop
+    username: string;
+    isPro?: boolean; // Add isPro prop
     onNavigate: (view: ViewType) => void;
     onLogout: () => void;
 }
 
-export function DashboardLayout({ children, activeView, username, onNavigate, onLogout }: DashboardLayoutProps) {
+export function DashboardLayout({ children, activeView, username, isPro, onNavigate, onLogout }: DashboardLayoutProps) {
     const { smartWalletPubkey } = useWallet();
 
     const navItems = [
         { id: 'HOME', label: 'Home', icon: '🏠' },
         { id: 'TASKS', label: 'Tasks', icon: '📋' },
+        { id: 'PRO', label: 'TaskRail Pro', icon: '💎' },
     ];
 
     return (
@@ -50,12 +52,22 @@ export function DashboardLayout({ children, activeView, username, onNavigate, on
                 {/* Profile & Logout */}
                 <div className="pt-6 border-t border-white/10 space-y-4">
                     <div className="flex items-center gap-3 px-2">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-sm font-bold uppercase">
-                            {username.slice(0, 2)}
+                        <div className="relative">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-sm font-bold uppercase transition-transform group-hover:scale-110">
+                                {username.slice(0, 2)}
+                            </div>
+                            {isPro && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-zinc-950 flex items-center justify-center text-[8px] text-zinc-950 font-bold">
+                                    ★
+                                </div>
+                            )}
                         </div>
                         <div className="overflow-hidden">
-                            <p className="text-sm font-medium leading-none truncate">{username}</p>
-                            <p className="text-xs text-white/40 mt-1 opacity-70">Member</p>
+                            <p className="text-sm font-medium leading-none truncate flex items-center gap-2">
+                                {username}
+                                {isPro && <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Pro</span>}
+                            </p>
+                            <p className="text-xs text-white/40 mt-1 opacity-70">{isPro ? 'Pro Member' : 'Member'}</p>
                         </div>
                     </div>
 

@@ -8,13 +8,16 @@ type MyTaskFilter = 'PENDING' | 'UNCLAIMED' | 'COMPLETED';
 
 interface TasksViewProps {
     demoTaskState: 'IDLE' | 'CLAIMED' | 'SUBMITTING' | 'PAID';
+    isPro: boolean; // Add isPro prop
     onClaim: () => void;
     onSubmit: () => void;
 }
 
-export function TasksView({ demoTaskState, onClaim, onSubmit }: TasksViewProps) {
+export function TasksView({ demoTaskState, isPro, onClaim, onSubmit }: TasksViewProps) {
     const [activeTab, setActiveTab] = useState<TaskTab>('EXPLORE');
     const [filter, setFilter] = useState<MyTaskFilter>('UNCLAIMED');
+
+    const exploreCount = isPro ? 12 : 6;
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -31,15 +34,23 @@ export function TasksView({ demoTaskState, onClaim, onSubmit }: TasksViewProps) 
 
             {activeTab === 'EXPLORE' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="bg-zinc-900/30 border border-white/5 p-6 rounded-xl opacity-60 hover:opacity-100 transition-opacity">
+                    {Array.from({ length: exploreCount }).map((_, i) => (
+                        <div key={i} className={`bg-zinc-900/30 border p-6 rounded-xl transition-all ${isPro ? 'border-emerald-500/10 hover:border-emerald-500/40 hover:bg-emerald-500/5' : 'border-white/5 opacity-60 hover:opacity-100'}`}>
                             <div className="flex justify-between items-start mb-4">
-                                <div className="w-10 h-10 bg-white/10 rounded-full"></div>
-                                <span className="text-xs bg-white/5 px-2 py-1 rounded text-white/50">Locked</span>
+                                <div className={`w-10 h-10 rounded-full ${isPro ? 'bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs' : 'bg-white/10'}`}>
+                                    {isPro ? 'PRO' : ''}
+                                </div>
+                                <span className={`text-xs px-2 py-1 rounded ${isPro ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/50'}`}>
+                                    {isPro ? 'Available' : 'Locked'}
+                                </span>
                             </div>
-                            <h4 className="font-semibold text-white mb-2">Social Booster #{i}</h4>
-                            <p className="text-sm text-white/40 mb-4">Engage with community posts regarding the new protocol update.</p>
-                            <div className="text-emerald-500/50 font-mono text-sm">Reward: $15.00</div>
+                            <h4 className="font-semibold text-white mb-2">{isPro ? 'Premium' : 'Social'} Booster #{i + 1}</h4>
+                            <p className="text-sm text-white/40 mb-4">
+                                {isPro ? 'Exclusive high-yield task for Pro members only. Complete for instant USDC.' : 'Engage with community posts regarding the new protocol update.'}
+                            </p>
+                            <div className={`font-mono text-sm ${isPro ? 'text-emerald-400' : 'text-emerald-500/50'}`}>
+                                Reward: ${isPro ? '45.00' : '15.00'}
+                            </div>
                         </div>
                     ))}
                 </div>

@@ -45,3 +45,14 @@ Transform the single-page demo into "TaskRail", a dashboard-style application wi
 
 ### 3. State Management
 - Lift state up to `DemoFlow` or a new Context to manage the "Task" status (Claimed/Paid) so it persists when switching tabs.
+- Add `isPro` state to track subscription status.
+
+## Phase 3: Pro Subscription (New)
+
+### 1. Subscription Flow
+- **Benefits View**: Detail Pro perks (More tasks, Faster review, Support).
+- **Billing Transaction**: Use Lazorkit to simulate building a recurring billing permission (Memo tx: "TaskRail: Subscribed to Pro").
+
+### 2. UI Persistence
+- **Sidebar**: Change "Upgrade" button to a "PRO" badge once subscribed.
+- **Tasks View**: Increase dummy task count from 6 to 12 upon `isPro` status.
