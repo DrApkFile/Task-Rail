@@ -22,7 +22,6 @@ export function HomeView({ bonusAmount, username }: { bonusAmount: number, usern
             <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
                 <div className="space-y-4">
-                    {/* Dynamic Activity Item */}
                     {bonusAmount > 0 && (
                         <ActivityItem action="Task Reward: X Post" amount="+$10.00" date="Just now" status="Completed" isNew />
                     )}

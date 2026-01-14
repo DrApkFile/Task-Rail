@@ -66,7 +66,6 @@ export function SessionPrompt({ isVisible, onSave, onClose }: SessionPromptProps
                 </div>
             </div>
 
-            {/* Bottom Progress Bar */}
             <div className="h-1 w-full bg-white/5 rounded-b-2xl overflow-hidden">
                 <div className={`h-full bg-emerald-500 transition-all duration-[8000ms] ease-linear w-full`}></div>
             </div>

@@ -4,14 +4,14 @@ import { ReactNode } from 'react';
 import { useWallet } from '@lazorkit/wallet';
 import { Logo } from './Logo';
 
-export type ViewType = 'HOME' | 'TASKS' | 'PRO';
+import { ViewType } from '../lib/types';
 
 interface DashboardLayoutProps {
     children: ReactNode;
     activeView: ViewType;
     username: string;
     isPro?: boolean;
-    isSessionActive?: boolean; // Add session prop
+    isSessionActive?: boolean;
     onNavigate: (view: ViewType) => void;
     onLogout: () => void;
 }
@@ -27,13 +27,11 @@ export function DashboardLayout({ children, activeView, username, isPro, isSessi
 
     return (
         <div className="flex h-screen bg-black text-white overflow-hidden font-[family-name:var(--font-geist-sans)]">
-            {/* Sidebar */}
             <aside className="w-64 bg-zinc-950 border-r border-white/10 flex flex-col p-6 z-20">
                 <div className="mb-10">
                     <Logo className="text-2xl" />
                 </div>
 
-                {/* Navigation */}
                 <nav className="flex-1 space-y-2">
                     {navItems.map((item) => (
                         <button
@@ -50,7 +48,6 @@ export function DashboardLayout({ children, activeView, username, isPro, isSessi
                     ))}
                 </nav>
 
-                {/* Profile & Logout */}
                 <div className="pt-6 border-t border-white/10 space-y-4">
                     <div className="flex items-center gap-3 px-2">
                         <div className="relative">
@@ -81,11 +78,9 @@ export function DashboardLayout({ children, activeView, username, isPro, isSessi
                 </div>
             </aside>
 
-            {/* Main Content Area */}
             <main className="flex-1 overflow-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black relative flex flex-col">
                 <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20 pointer-events-none"></div>
 
-                {/* Header / Top Right Info */}
                 <header className="relative z-20 flex justify-end items-center gap-4 p-6">
                     {isSessionActive && (
                         <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full animate-in fade-in slide-in-from-right-4">

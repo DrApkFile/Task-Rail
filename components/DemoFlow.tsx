@@ -1,86 +1,68 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@lazorkit/wallet';
-import { Buffer } from 'buffer';
-import { LoginButton } from './LoginButton';
-import { DashboardLayout, ViewType } from './DashboardLayout';
+import { DashboardLayout } from './DashboardLayout';
 import { HomeView } from './views/HomeView';
 import { TasksView } from './views/TasksView';
 import { ProView } from './views/ProView';
 import { SessionPrompt } from './SessionPrompt';
 import { Logo } from './Logo';
+import { LoginButton } from './LoginButton';
+import { useAppState } from '../hooks/useAppState';
+import { signTransactionSafe } from '../lib/solana';
 
-type FlowState = 'IDLE' | 'CLAIMED' | 'SUBMITTING' | 'PAID';
 
 export function DemoFlow() {
+    /** 
+     * PASSKEY AUTHENTICATION: 
+     * Managed by the useWallet hook. The isConnected state and signAndSendTransaction 
+     * methods abstract the entire WebAuthn/Passkey flow into a standard wallet interface.
+     */
     const { isConnected, signAndSendTransaction, smartWalletPubkey, disconnect } = useWallet();
-    const [activeView, setActiveView] = useState<ViewType>('HOME');
-    const [username, setUsername] = useState<string>('LazyGenius');
-    const [isPro, setIsPro] = useState<boolean>(false);
-    const [isSessionActive, setIsSessionActive] = useState<boolean>(false);
-    const [showSessionPrompt, setShowSessionPrompt] = useState<boolean>(false);
-    const [hasDoneFirstTask, setHasDoneFirstTask] = useState<boolean>(false);
 
-    // Use a ref for session status to avoid stale closure in async functions
-    const isSessionActiveRef = useRef(isSessionActive);
+    // Custom hook managing all local application state and persistence
+    const {
+        activeView, setActiveView,
+        username, setUsername,
+        isPro, setIsPro,
+        isSessionActive, setIsSessionActive,
+        isSessionActiveRef,
+        showSessionPrompt, setShowSessionPrompt,
+        hasDoneFirstTask, setHasDoneFirstTask,
+        taskState, setTaskState
+    } = useAppState(isConnected);
 
-    // Keep ref in sync
-    useEffect(() => {
-        isSessionActiveRef.current = isSessionActive;
-        console.log("Session status updated:", isSessionActive);
-    }, [isSessionActive]);
-
-    // Task State (Lifted up to persist across views)
-    const [taskState, setTaskState] = useState<FlowState>('IDLE');
-
-    // ... (skipped persistence logic 1)
-
-    // UNIFIED SIGNING HELPER
+    /**
+     * UNIFIED TRANSACTION LOGIC:
+     * Handles both standard Passkey-signed transactions and background-signed Session transactions.
+     * Logic is simplified by outsourcing to the signTransactionSafe library helper.
+     */
     const executeTransaction = async (memo: string) => {
-        const { TransactionInstruction, PublicKey } = await import('@solana/web3.js');
-        const memoProgramId = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcQb");
-        const instruction = new TransactionInstruction({
-            keys: [{ pubkey: smartWalletPubkey!, isSigner: true, isWritable: true }],
-            programId: memoProgramId,
-            data: Buffer.from(memo, "utf-8"),
-        });
+        if (!smartWalletPubkey) return;
 
-        // CRITICAL FIX: Use the ref here to skip Passkey if session is active
-        if (isSessionActiveRef.current) {
-            console.log(`[Smart Session ⚡] BYPASSING Passkey for: ${memo}`);
-            await new Promise(r => setTimeout(r, 1200)); // Simulated background sign
-            return "SESSION_SIGNATURE_PROVED";
-        } else {
-            console.log(`[Passkey 🛡️] Signature required for: ${memo}`);
-            const sig = await signAndSendTransaction({
-                instructions: [instruction],
-            });
-
-            // Post-First-Transaction Prompt Logic
-            if (!hasDoneFirstTask) {
-                console.log("First transaction complete. Showing Session Prompt...");
-                setTimeout(() => setShowSessionPrompt(true), 1500);
-                setHasDoneFirstTask(true);
+        return signTransactionSafe({
+            memo,
+            smartWalletPubkey,
+            isSessionActive: isSessionActiveRef.current,
+            signAndSendTransaction,
+            onFirstSuccess: () => {
+                if (!hasDoneFirstTask) {
+                    setTimeout(() => setShowSessionPrompt(true), 1500);
+                    setHasDoneFirstTask(true);
+                }
             }
-
-            return sig;
-        }
+        });
     };
 
-    // Subscription Logic
     const handleSubscribe = async () => {
         try {
             await executeTransaction("TaskRail: Subscribed to Pro");
             setIsPro(true);
-            // alert("Welcome to TaskRail Pro!");
         } catch (err) {
             console.error("Subscription failed:", err);
-            // alert("Subscription setup failed.");
         }
     };
 
-    // Task Submission Logic
     const handleTaskSubmit = async () => {
         try {
             setTaskState('SUBMITTING');
@@ -92,24 +74,17 @@ export function DemoFlow() {
         }
     };
 
-    // ---------------------------------------------------------
-    // RENDER: Landing Page (Not Connected)
-    // ---------------------------------------------------------
     if (!isConnected) {
         return (
             <div className="flex min-h-screen bg-black text-white relative overflow-hidden font-[family-name:var(--font-geist-sans)]">
-                {/* Background Gradients */}
                 <div className="absolute inset-0 z-0">
                     <div className="absolute top-[-10%] right-[-5%] w-[60%] h-[60%] bg-purple-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
                     <div className="absolute bottom-[-10%] left-[-5%] w-[60%] h-[60%] bg-emerald-600/20 blur-[120px] rounded-full mix-blend-screen opacity-50"></div>
                 </div>
 
-                {/* Content */}
                 <div className="relative z-10 w-full flex flex-col items-center justify-center p-6">
-
                     <div className="w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-500">
                         <div className="flex flex-col items-center text-center space-y-6">
-
                             <div className="mb-2 scale-125">
                                 <Logo />
                             </div>
@@ -123,7 +98,6 @@ export function DemoFlow() {
                                 </p>
                             </div>
 
-                            {/* Login Form Simulation */}
                             <div className="w-full space-y-4 pt-4 border-t border-white/5">
                                 <div className="space-y-1 text-left">
                                     <label className="text-xs font-semibold text-white/40 uppercase ml-1">Username</label>
@@ -144,18 +118,14 @@ export function DemoFlow() {
                                     By connecting, you agree to our Terms of Service.
                                 </p>
                             </div>
-
                         </div>
                     </div>
-
                 </div>
             </div>
         );
     }
 
-    // ---------------------------------------------------------
-    // RENDER: Dashboard (Connected)
-    // ---------------------------------------------------------
+
     return (
         <>
             <DashboardLayout

@@ -22,7 +22,6 @@ export function TasksView({ demoTaskState, isPro, onClaim, onSubmit }: TasksView
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-            {/* Top Tabs */}
             <div className="flex gap-6 border-b border-white/10 pb-4">
                 <TabButton isActive={activeTab === 'EXPLORE'} onClick={() => setActiveTab('EXPLORE')}>
                     Explore Tasks
@@ -58,7 +57,6 @@ export function TasksView({ demoTaskState, isPro, onClaim, onSubmit }: TasksView
 
             {activeTab === 'MY_TASKS' && (
                 <div className="space-y-6">
-                    {/* Filter Pills */}
                     <div className="flex gap-2">
                         <FilterPill isActive={filter === 'PENDING'} onClick={() => setFilter('PENDING')}>Pending Review (2)</FilterPill>
                         <FilterPill isActive={filter === 'UNCLAIMED'} onClick={() => setFilter('UNCLAIMED')}>Needs Action (1)</FilterPill>
