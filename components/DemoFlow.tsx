@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useWallet } from '@lazorkit/wallet';
 import { Buffer } from 'buffer';
 import { LoginButton } from './LoginButton';
@@ -22,41 +22,19 @@ export function DemoFlow() {
     const [showSessionPrompt, setShowSessionPrompt] = useState<boolean>(false);
     const [hasDoneFirstTask, setHasDoneFirstTask] = useState<boolean>(false);
 
+    // Use a ref for session status to avoid stale closure in async functions
+    const isSessionActiveRef = useRef(isSessionActive);
+
+    // Keep ref in sync
+    useEffect(() => {
+        isSessionActiveRef.current = isSessionActive;
+        console.log("Session status updated:", isSessionActive);
+    }, [isSessionActive]);
+
     // Task State (Lifted up to persist across views)
     const [taskState, setTaskState] = useState<FlowState>('IDLE');
 
-    // 1. Persistence Logic: Load from LocalStorage
-    useEffect(() => {
-        const savedUsername = localStorage.getItem('tr_username');
-        const savedIsPro = localStorage.getItem('tr_isPro') === 'true';
-        const savedIsSessionActive = localStorage.getItem('tr_isSessionActive') === 'true';
-
-        if (savedUsername) setUsername(savedUsername);
-        if (savedIsPro) setIsPro(savedIsPro);
-        if (savedIsSessionActive) setIsSessionActive(savedIsSessionActive);
-    }, []);
-
-    // Sync to LocalStorage
-    useEffect(() => {
-        if (isConnected) {
-            localStorage.setItem('tr_username', username);
-            localStorage.setItem('tr_isPro', isPro.toString());
-            localStorage.setItem('tr_isSessionActive', isSessionActive.toString());
-        }
-    }, [username, isPro, isSessionActive, isConnected]);
-
-    // Reset state if disconnected (Clear persistence if explicit logout)
-    useEffect(() => {
-        if (!isConnected) {
-            setTaskState('IDLE');
-            setActiveView('HOME');
-            setIsPro(false);
-            setIsSessionActive(false);
-            setShowSessionPrompt(false);
-            localStorage.removeItem('tr_isPro');
-            localStorage.removeItem('tr_isSessionActive');
-        }
-    }, [isConnected]);
+    // ... (skipped persistence logic 1)
 
     // UNIFIED SIGNING HELPER
     const executeTransaction = async (memo: string) => {
@@ -68,18 +46,20 @@ export function DemoFlow() {
             data: Buffer.from(memo, "utf-8"),
         });
 
-        if (isSessionActive) {
-            console.log(`[Smart Session] Signing instantly: ${memo}`);
+        // CRITICAL FIX: Use the ref here to skip Passkey if session is active
+        if (isSessionActiveRef.current) {
+            console.log(`[Smart Session ⚡] BYPASSING Passkey for: ${memo}`);
             await new Promise(r => setTimeout(r, 1200)); // Simulated background sign
             return "SESSION_SIGNATURE_PROVED";
         } else {
-            console.log(`[Passkey] Requesting signature: ${memo}`);
+            console.log(`[Passkey 🛡️] Signature required for: ${memo}`);
             const sig = await signAndSendTransaction({
                 instructions: [instruction],
             });
 
             // Post-First-Transaction Prompt Logic
             if (!hasDoneFirstTask) {
+                console.log("First transaction complete. Showing Session Prompt...");
                 setTimeout(() => setShowSessionPrompt(true), 1500);
                 setHasDoneFirstTask(true);
             }
